@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/bluesky-social/indigo/api/atproto"
+	"github.com/bluesky-social/indigo/api/bsky"
 	"github.com/bluesky-social/indigo/lex/util"
 	"github.com/bluesky-social/indigo/xrpc"
 	"github.com/jtarrio/atp"
-	"github.com/jtarrio/atp/posts"
 	"github.com/lestrrat-go/jwx/v3/jwt"
 )
 
@@ -22,7 +22,7 @@ type Client interface {
 	// If the client already has valid tokens, this operation is a no-op.
 	GetAccessToken(ctx context.Context) error
 	// Publish saves the given post in the user's timeline, returning the post's CID and URI.
-	Publish(ctx context.Context, post *atp.Post) (*PublishResult, error)
+	Publish(ctx context.Context, post *bsky.FeedPost) (*PublishResult, error)
 	// FindUserByHandle returns the handle and DID of the user with the given handle.
 	FindUserByHandle(ctx context.Context, handle string) (*UserData, error)
 	// FindUserByDid returns the handle and DID of the user with the given handle.
@@ -51,7 +51,6 @@ func New(identifier string, password string, options ...ClientOption) Client {
 		identifier: identifier,
 		password:   password,
 		clock:      atp.SystemClock(),
-		converter:  posts.NewConverter(posts.WithClock(atp.SystemClock())),
 		xrpc:       &xrpc.Client{Host: "https://bsky.social"},
 	}
 	for _, option := range options {
@@ -78,7 +77,6 @@ func WithHttpClient(client *http.Client) ClientOption {
 func WithClock(clock atp.Clock) ClientOption {
 	return func(p *clientImpl) {
 		p.clock = clock
-		p.converter = posts.NewConverter(posts.WithClock(clock))
 	}
 }
 
@@ -89,7 +87,6 @@ type clientImpl struct {
 	identifier string
 	password   string
 	clock      atp.Clock
-	converter  *posts.Converter
 	xrpc       *xrpc.Client
 	xrpcMutex  sync.RWMutex
 }
@@ -138,7 +135,7 @@ func (c *clientImpl) GetAccessToken(ctx context.Context) error {
 	return nil
 }
 
-func (c *clientImpl) Publish(ctx context.Context, post *atp.Post) (*PublishResult, error) {
+func (c *clientImpl) Publish(ctx context.Context, post *bsky.FeedPost) (*PublishResult, error) {
 	if err := c.GetAccessToken(ctx); err != nil {
 		return nil, err
 	}
@@ -146,7 +143,7 @@ func (c *clientImpl) Publish(ctx context.Context, post *atp.Post) (*PublishResul
 	defer c.xrpcMutex.RUnlock()
 	input := &atproto.RepoCreateRecord_Input{
 		Collection: "app.bsky.feed.post",
-		Record:     &util.LexiconTypeDecoder{Val: c.converter.ToFeedPost(post)},
+		Record:     &util.LexiconTypeDecoder{Val: post},
 		Repo:       c.xrpc.Auth.Did,
 	}
 	output, err := atproto.RepoCreateRecord(ctx, c.xrpc, input)

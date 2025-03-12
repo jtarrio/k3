@@ -86,10 +86,10 @@ func TestPublish(t *testing.T) {
 	fakeServer.Calls = nil
 
 	post := atp.NewPost().SetCreationTime(clock.Now()).AddText(`y así como don Quijote los vio, dijo a su escudero`)
-	_, err = c.Publish(ctx, post)
+	feedPost := posts.NewConverter(posts.WithClock(clock)).ToFeedPost(post)
+	_, err = c.Publish(ctx, feedPost)
 	require.NoError(t, err)
 
-	feedPost := posts.NewConverter(posts.WithClock(clock)).ToFeedPost(post)
 	expectedCalls := []atptesting.Call{{
 		Method: "com.atproto.repo.createRecord",
 		User:   &username,

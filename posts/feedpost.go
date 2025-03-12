@@ -31,7 +31,7 @@ type Converter struct {
 
 // ToFeedPost generates a Bluesky FeedPost object from the content of the given post.
 //
-// The creation time, if unset, is populated with an always-increasing clock.
+// The creation time, if unset, is populated with an always-increasing clock so that different posts have different creation times.
 func (c *Converter) ToFeedPost(post *atp.Post) *bsky.FeedPost {
 	var creationTime time.Time
 	if post.CreationTime == nil {
