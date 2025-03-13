@@ -1,23 +1,23 @@
-package atp_test
+package k3_test
 
 import (
 	"testing"
 	"time"
 
-	"github.com/jtarrio/atp"
+	"github.com/jtarrio/k3"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewPostSimple(t *testing.T) {
-	post := atp.NewPost().
+	post := k3.NewPost().
 		AddText(`En un lugar de la Mancha`)
 
-	expected := &atp.Post{Blocks: []atp.PostBlock{{Text: `En un lugar de la Mancha`}}}
+	expected := &k3.Post{Blocks: []k3.PostBlock{{Text: `En un lugar de la Mancha`}}}
 	assert.Equal(t, expected, post)
 }
 
 func TestNewPostAllBlocks(t *testing.T) {
-	post := atp.NewPost().
+	post := k3.NewPost().
 		SetCreationTime(time.Date(2025, time.January, 2, 12, 34, 56, 789000000, time.UTC)).
 		AddText(`En esto, descubrieron `).
 		AddLink(`treinta o cuarenta`, `https://url1`).
@@ -27,9 +27,9 @@ func TestNewPostAllBlocks(t *testing.T) {
 		AddTag(`#viento`, `viento`).
 		AddLanguage("es")
 
-	expected := &atp.Post{
+	expected := &k3.Post{
 		CreationTime: ptr(time.Date(2025, time.January, 2, 12, 34, 56, 789000000, time.UTC)),
-		Blocks: []atp.PostBlock{
+		Blocks: []k3.PostBlock{
 			{Text: `En esto, descubrieron `},
 			{Text: `treinta o cuarenta`, Link: ptr(`https://url1`)},
 			{Text: ` `},
@@ -43,7 +43,7 @@ func TestNewPostAllBlocks(t *testing.T) {
 }
 
 func TestCombineLikeBlocks(t *testing.T) {
-	post := atp.NewPost().
+	post := k3.NewPost().
 		AddText(`En esto, `).
 		AddText(`descubrieron `).
 		AddLink(`treinta `, `https://url1`).
@@ -55,9 +55,9 @@ func TestCombineLikeBlocks(t *testing.T) {
 		AddTag(`#vie`, `viento`).
 		AddTag(`nto`, `viento`)
 
-	expected := &atp.Post{
+	expected := &k3.Post{
 		CreationTime: nil,
-		Blocks: []atp.PostBlock{
+		Blocks: []k3.PostBlock{
 			{Text: `En esto, descubrieron `},
 			{Text: `treinta o cuarenta`, Link: ptr(`https://url1`)},
 			{Text: ` `},

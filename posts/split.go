@@ -4,22 +4,22 @@ import (
 	"fmt"
 	"unicode"
 
-	"github.com/jtarrio/atp"
+	"github.com/jtarrio/k3"
 )
 
 const maxPostGraphemeLength = 300
 
 // Split takes a post that is too long to be published on Bluesky, and splits it into multiple posts.
-func Split(post *atp.Post) []*atp.Post {
+func Split(post *k3.Post) []*k3.Post {
 	if post.GetGraphemeLength() <= maxPostGraphemeLength {
-		return []*atp.Post{post}
+		return []*k3.Post{post}
 	}
 
 	blocks := splitBlocks(post.Blocks)
 	solid := groupBlocks(blocks)
-	var out []*atp.Post
+	var out []*k3.Post
 	for _, postBlocks := range solid {
-		newPost := atp.NewPost()
+		newPost := k3.NewPost()
 		newPost.CreationTime = post.CreationTime
 		newPost.Languages = post.Languages
 		for _, block := range postBlocks {
@@ -31,8 +31,8 @@ func Split(post *atp.Post) []*atp.Post {
 }
 
 // splitBlocks creates a list of blocks that contain words and spacing between words, in that order.
-func splitBlocks(blocks []atp.PostBlock) []atp.PostBlock {
-	var output []atp.PostBlock
+func splitBlocks(blocks []k3.PostBlock) []k3.PostBlock {
+	var output []k3.PostBlock
 	isText := true
 	start := 0
 	for _, block := range blocks {
@@ -67,16 +67,16 @@ func splitBlocks(blocks []atp.PostBlock) []atp.PostBlock {
 }
 
 // groupBlocks creates groups of blocks that, together with the item count, fit within the limits.
-func groupBlocks(blocks []atp.PostBlock) [][]atp.PostBlock {
+func groupBlocks(blocks []k3.PostBlock) [][]k3.PostBlock {
 	getPrefix := func(i, n int) string { return fmt.Sprintf("[%d/%d] ", i, n) }
 	maxCount := 9
 	for {
-		var outGroups [][]atp.PostBlock
-		var group []atp.PostBlock
+		var outGroups [][]k3.PostBlock
+		var group []k3.PostBlock
 		var groupLen int
 		startGroup := func(i int) {
 			n := len(outGroups) + 1
-			group = []atp.PostBlock{blocks[i]}
+			group = []k3.PostBlock{blocks[i]}
 			prefixSize := len(getPrefix(n, maxCount))
 			groupLen = blocks[i].GetGraphemeLength() + prefixSize
 		}
@@ -98,7 +98,7 @@ func groupBlocks(blocks []atp.PostBlock) [][]atp.PostBlock {
 		}
 		for i := range outGroups {
 			group := append(
-				[]atp.PostBlock{atp.NewBlock(getPrefix(i+1, len(outGroups)))},
+				[]k3.PostBlock{k3.NewBlock(getPrefix(i+1, len(outGroups)))},
 				outGroups[i]...)
 			outGroups[i] = group
 		}

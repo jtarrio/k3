@@ -13,14 +13,14 @@ import (
 	"github.com/bluesky-social/indigo/api/bsky"
 	"github.com/bluesky-social/indigo/atproto/identity"
 	"github.com/bluesky-social/indigo/xrpc"
-	"github.com/jtarrio/atp"
+	"github.com/jtarrio/k3"
 	"github.com/lestrrat-go/jwx/v3/jwt"
 )
 
 // NewFakeServer returns a fake Bluesky server for testing.
 func NewFakeServer(options ...FakeServerOption) *FakeServer {
 	fs := &FakeServer{
-		clock:   atp.SystemClock(),
+		clock:   k3.SystemClock(),
 		users:   map[string]string{},
 		methods: map[methodKey]methodFunc{},
 	}
@@ -36,7 +36,7 @@ func NewFakeServer(options ...FakeServerOption) *FakeServer {
 }
 
 // WithClock makes the FakeServer use the given clock.
-func WithClock(clock atp.Clock) FakeServerOption {
+func WithClock(clock k3.Clock) FakeServerOption {
 	return func(fs *FakeServer) {
 		fs.clock = clock
 	}
@@ -50,7 +50,7 @@ type FakeServer struct {
 	Calls []Call
 	// Posts contains all the posts that were published to the server.
 	Posts    []Post
-	clock    atp.Clock
+	clock    k3.Clock
 	users    map[string]string
 	methods  map[methodKey]methodFunc
 	userDids []identity.DIDDocument

@@ -4,12 +4,12 @@ import (
 	"time"
 
 	"github.com/bluesky-social/indigo/api/bsky"
-	"github.com/jtarrio/atp"
+	"github.com/jtarrio/k3"
 )
 
 // NewConverter creates a new Converter instance with the given options
 func NewConverter(options ...ConverterOption) *Converter {
-	c := &Converter{clock: atp.NewIncreasingClock(atp.SystemClock())}
+	c := &Converter{clock: k3.NewIncreasingClock(k3.SystemClock())}
 	for _, option := range options {
 		option(c)
 	}
@@ -17,22 +17,22 @@ func NewConverter(options ...ConverterOption) *Converter {
 }
 
 // WithClock makes the converter use the given clock to assign creation times to posts that don't have one.
-func WithClock(clock atp.Clock) ConverterOption {
+func WithClock(clock k3.Clock) ConverterOption {
 	return func(c *Converter) {
-		c.clock = atp.NewIncreasingClock(clock)
+		c.clock = k3.NewIncreasingClock(clock)
 	}
 }
 
 type ConverterOption func(*Converter)
 
 type Converter struct {
-	clock atp.Clock
+	clock k3.Clock
 }
 
 // ToFeedPost generates a Bluesky FeedPost object from the content of the given post.
 //
 // The creation time, if unset, is populated with an always-increasing clock so that different posts have different creation times.
-func (c *Converter) ToFeedPost(post *atp.Post) *bsky.FeedPost {
+func (c *Converter) ToFeedPost(post *k3.Post) *bsky.FeedPost {
 	var creationTime time.Time
 	if post.CreationTime == nil {
 		creationTime = c.clock.Now()
@@ -65,7 +65,7 @@ func (c *Converter) ToFeedPost(post *atp.Post) *bsky.FeedPost {
 	return out
 }
 
-func getBlockFeatures(block *atp.PostBlock) []*bsky.RichtextFacet_Features_Elem {
+func getBlockFeatures(block *k3.PostBlock) []*bsky.RichtextFacet_Features_Elem {
 	var out []*bsky.RichtextFacet_Features_Elem
 	if block.Link != nil && len(*block.Link) > 0 {
 		out = append(out, &bsky.RichtextFacet_Features_Elem{

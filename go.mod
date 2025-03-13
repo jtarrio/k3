@@ -1,4 +1,4 @@
-module github.com/jtarrio/atp
+module github.com/jtarrio/k3
 
 go 1.23.4
 

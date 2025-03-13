@@ -3,14 +3,14 @@ package text_test
 import (
 	"testing"
 
-	"github.com/jtarrio/atp"
-	"github.com/jtarrio/atp/import/text"
+	"github.com/jtarrio/k3"
+	"github.com/jtarrio/k3/import/text"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestConvertPlainText(t *testing.T) {
 	post := text.NewImporter().Import(`This is a simple string`)
-	expected := atp.NewPost().AddText(`This is a simple string`)
+	expected := k3.NewPost().AddText(`This is a simple string`)
 	assert.Equal(t, expected, post)
 }
 
@@ -28,7 +28,7 @@ IPv4 http://127.0.0.1:8080/
 Escapes http://example.net/ab%63?abc=d%20ef#ghi%20jkl
 Final punctuation http://example.com/abc?foo=bar.,!?)more.,!?)
 The end`)
-	expected := atp.NewPost().AddText(`
+	expected := k3.NewPost().AddText(`
 Hostname `).AddLink(`example.com`, "https://example.com").AddText(`
 Hostname slash `).AddLink(`example.com`, "https://example.com/").AddText(`
 Path `).AddLink(`example.net/foo/bar`, "http://example.net/foo/bar").AddText(`
@@ -60,7 +60,7 @@ Not any random number 123.456.789:8080
 Escapes example.net/ab%63?abc=d%20ef#ghi%20jkl
 Final punctuation example.com/abc?foo=bar.,!?)more.,!?)
 The end`)
-	expected := atp.NewPost().AddText(`
+	expected := k3.NewPost().AddText(`
 Hostname `).AddLink(`example.com`, "https://example.com").AddText(`
 Hostname slash `).AddLink(`example.com`, "https://example.com/").AddText(`
 Path `).AddLink(`example.net/foo/bar`, "https://example.net/foo/bar").AddText(`
@@ -91,7 +91,7 @@ func TestConvertUsernames(t *testing.T) {
 An invalid @username
 A @valid.username
 Something else`)
-	expected := atp.NewPost().AddText(`
+	expected := k3.NewPost().AddText(`
 An invalid @username
 A `).AddMention(`@valid.username`, `cid:web:valid.username`).AddText(`
 Something else`)
@@ -104,7 +104,7 @@ Some #hashtag
 A ##doubleHashtag
 Some #more.Text_In-ThisTag and after
 Something else`)
-	expected := atp.NewPost().AddText(`
+	expected := k3.NewPost().AddText(`
 Some `).AddTag(`#hashtag`, `hashtag`).AddText(`
 A `).AddTag(`##doubleHashtag`, `#doubleHashtag`).AddText(`
 Some `).AddTag(`#more.Text_In-ThisTag`, `more.Text_In-ThisTag`).AddText(` and after

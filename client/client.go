@@ -11,7 +11,7 @@ import (
 	"github.com/bluesky-social/indigo/api/bsky"
 	"github.com/bluesky-social/indigo/lex/util"
 	"github.com/bluesky-social/indigo/xrpc"
-	"github.com/jtarrio/atp"
+	"github.com/jtarrio/k3"
 	"github.com/lestrrat-go/jwx/v3/jwt"
 )
 
@@ -47,7 +47,7 @@ func New(identifier string, password string, options ...ClientOption) Client {
 	client := &clientImpl{
 		identifier: identifier,
 		password:   password,
-		clock:      atp.SystemClock(),
+		clock:      k3.SystemClock(),
 		xrpc:       &xrpc.Client{Host: "https://bsky.social"},
 	}
 	for _, option := range options {
@@ -71,7 +71,7 @@ func WithHttpClient(client *http.Client) ClientOption {
 }
 
 // WithClock makes the client use a different time source.
-func WithClock(clock atp.Clock) ClientOption {
+func WithClock(clock k3.Clock) ClientOption {
 	return func(p *clientImpl) {
 		p.clock = clock
 	}
@@ -83,7 +83,7 @@ type ClientOption func(*clientImpl)
 type clientImpl struct {
 	identifier string
 	password   string
-	clock      atp.Clock
+	clock      k3.Clock
 	xrpc       *xrpc.Client
 	xrpcMutex  sync.RWMutex
 }

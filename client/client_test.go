@@ -8,10 +8,10 @@ import (
 	"github.com/bluesky-social/indigo/api/atproto"
 	"github.com/bluesky-social/indigo/atproto/identity"
 	"github.com/bluesky-social/indigo/lex/util"
-	"github.com/jtarrio/atp"
-	"github.com/jtarrio/atp/client"
-	"github.com/jtarrio/atp/posts"
-	atptesting "github.com/jtarrio/atp/testing"
+	"github.com/jtarrio/k3"
+	"github.com/jtarrio/k3/client"
+	"github.com/jtarrio/k3/posts"
+	atptesting "github.com/jtarrio/k3/testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -85,7 +85,7 @@ func TestPublish(t *testing.T) {
 	require.NoError(t, err)
 	fakeServer.Calls = nil
 
-	post := atp.NewPost().SetCreationTime(clock.Now()).AddText(`y así como don Quijote los vio, dijo a su escudero`)
+	post := k3.NewPost().SetCreationTime(clock.Now()).AddText(`y así como don Quijote los vio, dijo a su escudero`)
 	feedPost := posts.NewConverter(posts.WithClock(clock)).ToFeedPost(post)
 	_, err = c.Publish(ctx, feedPost)
 	require.NoError(t, err)

@@ -2,7 +2,7 @@ package testing
 
 import "time"
 
-// FakeClock is an atp.Clock that returns a user-provided time.
+// FakeClock is an k3.Clock that returns a user-provided time.
 type FakeClock struct {
 	Time time.Time
 }

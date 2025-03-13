@@ -15,14 +15,14 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/jtarrio/atp"
+	"github.com/jtarrio/k3"
 	"golang.org/x/net/html"
 )
 
 // Importer is an interface to convert some HTML into a Bluesky post.
 type Importer interface {
 	// Import converts the given HTML code into a post.
-	Import(html string) (*atp.Post, error)
+	Import(html string) (*k3.Post, error)
 }
 
 // NewImporter creates a new HTML importer.
@@ -32,19 +32,19 @@ func NewImporter() Importer {
 
 type importer struct{}
 
-func (*importer) Import(input string) (*atp.Post, error) {
+func (*importer) Import(input string) (*k3.Post, error) {
 	doc, err := html.Parse(strings.NewReader(input))
 	if err != nil {
 		return nil, &HtmlParseError{err}
 	}
 
-	conv := &converter{post: atp.NewPost()}
+	conv := &converter{post: k3.NewPost()}
 	conv.convert(doc)
 	return conv.post, nil
 }
 
 type converter struct {
-	post       *atp.Post
+	post       *k3.Post
 	inPara     bool
 	inPre      bool
 	wantSpace  bool

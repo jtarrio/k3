@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/bluesky-social/indigo/api/bsky"
-	"github.com/jtarrio/atp"
-	"github.com/jtarrio/atp/posts"
-	atptesting "github.com/jtarrio/atp/testing"
+	"github.com/jtarrio/k3"
+	"github.com/jtarrio/k3/posts"
+	atptesting "github.com/jtarrio/k3/testing"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,7 +16,7 @@ func TestConvertPlainText(t *testing.T) {
 	fakeClock := &atptesting.FakeClock{Time: time.Date(2025, time.January, 2, 12, 34, 56, 789000000, time.UTC)}
 	c := posts.NewConverter(posts.WithClock(fakeClock))
 
-	post := atp.NewPost().
+	post := k3.NewPost().
 		AddText(`En esto, descubrieron treinta o cuarenta molinos de viento que hay`).
 		AddText(` en aquel campo, y así como don Quijote los vio, dijo a su escudero:`)
 	feedPost := c.ToFeedPost(post)
@@ -32,7 +32,7 @@ func TestUseIncreasingClockWhenCreationTimeIsUnset(t *testing.T) {
 	fakeClock := &atptesting.FakeClock{Time: time.Date(2025, time.January, 2, 12, 34, 56, 789000000, time.UTC)}
 	c := posts.NewConverter(posts.WithClock(fakeClock))
 
-	feedPost := c.ToFeedPost(atp.NewPost().AddText(`En esto, descubrieron treinta o cuarenta molinos de viento que hay`))
+	feedPost := c.ToFeedPost(k3.NewPost().AddText(`En esto, descubrieron treinta o cuarenta molinos de viento que hay`))
 	expected := &bsky.FeedPost{
 		LexiconTypeID: "app.bsky.feed.post",
 		CreatedAt:     "2025-01-02T12:34:56.789Z",
@@ -40,7 +40,7 @@ func TestUseIncreasingClockWhenCreationTimeIsUnset(t *testing.T) {
 	}
 	assert.Equal(t, expected, feedPost)
 
-	feedPost = c.ToFeedPost(atp.NewPost().AddText(`en aquel campo, y así como don Quijote los vio, dijo a su escudero:`))
+	feedPost = c.ToFeedPost(k3.NewPost().AddText(`en aquel campo, y así como don Quijote los vio, dijo a su escudero:`))
 	expected = &bsky.FeedPost{
 		LexiconTypeID: "app.bsky.feed.post",
 		CreatedAt:     "2025-01-02T12:34:56.79Z",
@@ -53,7 +53,7 @@ func TestUseCreationTimeWhenSet(t *testing.T) {
 	fakeClock := &atptesting.FakeClock{Time: time.Date(2025, time.January, 2, 12, 34, 56, 789000000, time.UTC)}
 	c := posts.NewConverter(posts.WithClock(fakeClock))
 
-	post := atp.NewPost().
+	post := k3.NewPost().
 		SetCreationTime(time.Date(1999, time.December, 25, 1, 23, 45, 678000000, time.UTC)).
 		AddText(`En esto, descubrieron treinta o cuarenta molinos de viento que hay`)
 	feedPost := c.ToFeedPost(post)
@@ -64,7 +64,7 @@ func TestUseCreationTimeWhenSet(t *testing.T) {
 	}
 	assert.Equal(t, expected, feedPost)
 
-	post = atp.NewPost().
+	post = k3.NewPost().
 		SetCreationTime(time.Date(1999, time.December, 25, 1, 23, 45, 678000000, time.UTC)).
 		AddText(`en aquel campo, y así como don Quijote los vio, dijo a su escudero:`)
 	feedPost = c.ToFeedPost(post)
@@ -80,7 +80,7 @@ func TestConvertLink(t *testing.T) {
 	fakeClock := &atptesting.FakeClock{Time: time.Date(2025, time.January, 2, 12, 34, 56, 789000000, time.UTC)}
 	c := posts.NewConverter(posts.WithClock(fakeClock))
 
-	post := atp.NewPost().
+	post := k3.NewPost().
 		AddText(`y así como `).
 		AddLink(`don Quijote`, `https://url1`).
 		AddText(` los vio, dijo a su escudero`)
@@ -101,7 +101,7 @@ func TestConvertMention(t *testing.T) {
 	fakeClock := &atptesting.FakeClock{Time: time.Date(2025, time.January, 2, 12, 34, 56, 789000000, time.UTC)}
 	c := posts.NewConverter(posts.WithClock(fakeClock))
 
-	post := atp.NewPost().
+	post := k3.NewPost().
 		AddText(`y así como `).
 		AddMention(`don Quijote`, `did1`).
 		AddText(` los vio, dijo a `).
@@ -124,7 +124,7 @@ func TestConvertTag(t *testing.T) {
 	fakeClock := &atptesting.FakeClock{Time: time.Date(2025, time.January, 2, 12, 34, 56, 789000000, time.UTC)}
 	c := posts.NewConverter(posts.WithClock(fakeClock))
 
-	post := atp.NewPost().
+	post := k3.NewPost().
 		AddText(`y así como `).
 		AddTag(`#DonQuijote`, `donquijote`).
 		AddText(` los vio, dijo a `).
@@ -147,7 +147,7 @@ func TestConvertLanguage(t *testing.T) {
 	fakeClock := &atptesting.FakeClock{Time: time.Date(2025, time.January, 2, 12, 34, 56, 789000000, time.UTC)}
 	c := posts.NewConverter(posts.WithClock(fakeClock))
 
-	post := atp.NewPost().
+	post := k3.NewPost().
 		AddText(`y así como don Quijote los vio, he said to his squire`).
 		AddLanguage("es").
 		AddLanguage("en")

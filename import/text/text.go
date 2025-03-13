@@ -15,13 +15,13 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/jtarrio/atp"
+	"github.com/jtarrio/k3"
 )
 
 // Importer is an interface to convert some plain text into a Bluesky post.
 type Importer interface {
 	// Import converts the given text string into a post.
-	Import(text string) *atp.Post
+	Import(text string) *k3.Post
 }
 
 // NewImporter creates a new Importer with the given options.
@@ -82,7 +82,7 @@ type importer struct {
 	urlFormatter   UrlFormatter
 }
 
-func (i *importer) Import(text string) *atp.Post {
+func (i *importer) Import(text string) *k3.Post {
 	var found []found
 	found = append(found, findAll(text, usernameRe, username)...)
 	found = append(found, findAll(text, hashtagRe, tag)...)
@@ -90,7 +90,7 @@ func (i *importer) Import(text string) *atp.Post {
 	found = append(found, findAll(text, shortUrlRe, webUrl)...)
 	sortFound(found)
 
-	out := atp.NewPost()
+	out := k3.NewPost()
 	p := 0
 	for _, f := range found {
 		if p > f.start {

@@ -9,11 +9,11 @@ import (
 
 	"github.com/bluesky-social/indigo/api/atproto"
 	"github.com/bluesky-social/indigo/api/bsky"
-	"github.com/jtarrio/atp"
-	"github.com/jtarrio/atp/client"
-	"github.com/jtarrio/atp/multiposter"
-	"github.com/jtarrio/atp/posts"
-	atptesting "github.com/jtarrio/atp/testing"
+	"github.com/jtarrio/k3"
+	"github.com/jtarrio/k3/client"
+	"github.com/jtarrio/k3/multiposter"
+	"github.com/jtarrio/k3/posts"
+	atptesting "github.com/jtarrio/k3/testing"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -178,7 +178,7 @@ func getPosts(count int) []*bsky.FeedPost {
 	converter := posts.NewConverter(posts.WithClock(&atptesting.FakeClock{Time: time.Date(2025, time.January, 2, 12, 34, 56, 789000000, time.UTC)}))
 	var out []*bsky.FeedPost
 	for i := range count {
-		post := atp.NewPost().AddText(fmt.Sprintf("This is post #%d", i+1))
+		post := k3.NewPost().AddText(fmt.Sprintf("This is post #%d", i+1))
 		out = append(out, converter.ToFeedPost(post))
 	}
 	return out

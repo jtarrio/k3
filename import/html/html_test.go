@@ -3,8 +3,8 @@ package html_test
 import (
 	"testing"
 
-	"github.com/jtarrio/atp"
-	"github.com/jtarrio/atp/import/html"
+	"github.com/jtarrio/k3"
+	"github.com/jtarrio/k3/import/html"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,7 +18,7 @@ carriage
 
 returns.`)
 	assert.NoError(t, err)
-	expected := atp.NewPost().AddText(`Some easy text. With inconsistent spacing and carriage returns.`)
+	expected := k3.NewPost().AddText(`Some easy text. With inconsistent spacing and carriage returns.`)
 	assert.Equal(t, expected, post)
 }
 
@@ -26,14 +26,14 @@ func TestHtmlWithLinks(t *testing.T) {
 	post, err := html.NewImporter().Import(`Some slightly <a href="url1">harder</a> text <a href="url2">with
 links</a>.`)
 	assert.NoError(t, err)
-	expected := atp.NewPost().AddText(`Some slightly `).AddLink(`harder`, "url1").AddText(` text `).AddLink(`with links`, "url2").AddText(`.`)
+	expected := k3.NewPost().AddText(`Some slightly `).AddLink(`harder`, "url1").AddText(` text `).AddLink(`with links`, "url2").AddText(`.`)
 	assert.Equal(t, expected, post)
 }
 
 func TestHtmlWithFormatting(t *testing.T) {
 	post, err := html.NewImporter().Import(`<p>This is a paragraph.</p><p>This is another paragraph.</p><p>And another one.</p>`)
 	assert.NoError(t, err)
-	expected := atp.NewPost().AddText(`This is a paragraph.
+	expected := k3.NewPost().AddText(`This is a paragraph.
 This is another paragraph.
 And another one.`)
 	assert.Equal(t, expected, post)
@@ -42,7 +42,7 @@ And another one.`)
 func TestHtmlWithImplicitParagraphs(t *testing.T) {
 	post, err := html.NewImporter().Import(`<p>This is a paragraph.</p>This is another paragraph.</p><p>And another one.<p>Yet another one.</p>`)
 	assert.NoError(t, err)
-	expected := atp.NewPost().AddText(`This is a paragraph.
+	expected := k3.NewPost().AddText(`This is a paragraph.
 This is another paragraph.
 And another one.
 Yet another one.`)
@@ -63,7 +63,7 @@ More text.
 <h6>There is no more down here</h6>
 The end.`)
 	assert.NoError(t, err)
-	expected := atp.NewPost().AddText(`Title
+	expected := k3.NewPost().AddText(`Title
 Subtitle
 Some text.
 Sub-sub title
@@ -95,7 +95,7 @@ Ditto with the<br>
 <p>Mixing <div>element</div> types.</p>
 `)
 	assert.NoError(t, err)
-	expected := atp.NewPost().AddText(`Outside.
+	expected := k3.NewPost().AddText(`Outside.
 Paragraph
 Div
 Empty paragraphs:
@@ -126,7 +126,7 @@ func TestHtmlWithLists(t *testing.T) {
 </ol>
 The end.`)
 	assert.NoError(t, err)
-	expected := atp.NewPost().AddText(`  * Unordered element.
+	expected := k3.NewPost().AddText(`  * Unordered element.
   * Another element.
   1. Ordered element.
   2. Another ordered element.
@@ -151,7 +151,7 @@ que &eacute;sta es buena guerra&comma; y es gran servicio de Dios
 quitar tan mala simiente de sobre la faz de la tierra&period;<br>
 &mdash;&iquest;Qu&eacute; gigantes&quest; &mdash;dijo Sancho Panza&period;`)
 	assert.NoError(t, err)
-	expected := atp.NewPost().AddText(`En esto, descubrieron treinta o cuarenta molinos de viento que hay en aquel campo, y así como don Quijote los vio, dijo a su escudero:
+	expected := k3.NewPost().AddText(`En esto, descubrieron treinta o cuarenta molinos de viento que hay en aquel campo, y así como don Quijote los vio, dijo a su escudero:
 —La ventura va guiando nuestras cosas mejor de lo que acertáramos a desear, porque ves allí, amigo Sancho Panza, donde se descubren treinta, o pocos más, desaforados gigantes, con quien pienso hacer batalla y quitarles a todos las vidas, con cuyos despojos comenzaremos a enriquecer; que ésta es buena guerra, y es gran servicio de Dios quitar tan mala simiente de sobre la faz de la tierra.
 —¿Qué gigantes? —dijo Sancho Panza.`)
 	assert.Equal(t, expected, post)
@@ -162,7 +162,7 @@ func TestUnknownTags(t *testing.T) {
 Some <b>bold</b> and <i>italic</i> text.
 And some <x-madeup>made up</x-madeup> tags.`)
 	assert.NoError(t, err)
-	expected := atp.NewPost().AddText(`Some bold and italic text. And some made up tags.`)
+	expected := k3.NewPost().AddText(`Some bold and italic text. And some made up tags.`)
 	assert.Equal(t, expected, post)
 }
 
@@ -176,7 +176,7 @@ More text.</p>
 <iframe>one two<script>three four</script>five six</iframe>
 done.`)
 	assert.NoError(t, err)
-	expected := atp.NewPost().AddText(`Some text. More text.
+	expected := k3.NewPost().AddText(`Some text. More text.
 Several levels of ignoring done.`)
 	assert.Equal(t, expected, post)
 }

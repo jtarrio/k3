@@ -5,7 +5,7 @@ import (
 
 	"github.com/bluesky-social/indigo/api/atproto"
 	"github.com/bluesky-social/indigo/api/bsky"
-	"github.com/jtarrio/atp/client"
+	"github.com/jtarrio/k3/client"
 )
 
 // Multiposter is an interface to post multiple messages at once, either as a sequence of individual messages or as a thread.
