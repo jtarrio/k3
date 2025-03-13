@@ -140,33 +140,3 @@ func TestSearchUsersByHandle(t *testing.T) {
 	_, err = c.FindUserByHandle(ctx, "xxxxx")
 	assert.Error(t, err)
 }
-
-func TestSearchUsersByDid(t *testing.T) {
-	username := "testuser"
-	password := "testpass"
-	clock := &atptesting.FakeClock{Time: time.Date(2025, time.January, 2, 12, 34, 56, 0, time.UTC)}
-	fakeServer := atptesting.NewFakeServer(atptesting.WithClock(clock))
-	fakeServer.AddUser(username, password)
-	fakeServer.AddUserDid(&identity.DIDDocument{
-		DID:         "did:web:username.xyz",
-		AlsoKnownAs: []string{"at://username"},
-	})
-	defer fakeServer.Close()
-
-	ctx := context.Background()
-	c := client.New(username, password, client.WithHost(fakeServer.URL()), client.WithClock(clock))
-	err := c.GetAccessToken(ctx)
-	require.NoError(t, err)
-	fakeServer.Calls = nil
-
-	result, err := c.FindUserByDid(ctx, "did:web:username.xyz")
-	require.NoError(t, err)
-	expected := &client.UserData{
-		Handle: "username",
-		Did:    "did:web:username.xyz",
-	}
-	assert.Equal(t, expected, result)
-
-	_, err = c.FindUserByDid(ctx, "did:web:xxxxxx")
-	assert.Error(t, err)
-}

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strings"
 	"sync"
 	"time"
 
@@ -25,8 +24,6 @@ type Client interface {
 	Publish(ctx context.Context, post *bsky.FeedPost) (*PublishResult, error)
 	// FindUserByHandle returns the handle and DID of the user with the given handle.
 	FindUserByHandle(ctx context.Context, handle string) (*UserData, error)
-	// FindUserByDid returns the handle and DID of the user with the given handle.
-	FindUserByDid(ctx context.Context, did string) (*UserData, error)
 }
 
 // PublishResult holds the result of the Publish method.
@@ -170,44 +167,6 @@ func (c *clientImpl) FindUserByHandle(ctx context.Context, username string) (*Us
 	result := &UserData{
 		Handle: username,
 		Did:    output.Did,
-	}
-	return result, nil
-}
-
-func (c *clientImpl) FindUserByDid(ctx context.Context, did string) (*UserData, error) {
-	if err := c.GetAccessToken(ctx); err != nil {
-		return nil, err
-	}
-	c.xrpcMutex.RLock()
-	defer c.xrpcMutex.RUnlock()
-	output, err := atproto.IdentityResolveDid(ctx, c.xrpc, did)
-	if err != nil {
-		return nil, fmt.Errorf("could not find DID '%s': %w", did, err)
-	}
-	didDocument, ok := output.DidDoc.(map[string]any)
-	if !ok {
-		return nil, fmt.Errorf("could not extract DID document: %+v", output.DidDoc)
-	}
-	rawAkas, found := didDocument["alsoKnownAs"]
-	if !found {
-		return nil, fmt.Errorf("the DID document does not contain an alsoKnownAs field")
-	}
-	akas, ok := rawAkas.([]any)
-	if !ok {
-		return nil, fmt.Errorf("the DID document contains a non-list alsoKnownAs field")
-	}
-	handle := ""
-	for _, rawAka := range akas {
-		if aka, ok := rawAka.(string); ok {
-			if suffix, ok := strings.CutPrefix(aka, "at://"); ok {
-				handle = suffix
-				break
-			}
-		}
-	}
-	result := &UserData{
-		Handle: handle,
-		Did:    did,
 	}
 	return result, nil
 }

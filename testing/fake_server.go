@@ -32,7 +32,6 @@ func NewFakeServer(options ...FakeServerOption) *FakeServer {
 	fs.Register(NewCommand(xrpc.Procedure, "com.atproto.server.refreshSession", fs.serverRefreshSession))
 	fs.Register(NewFunction(xrpc.Procedure, "com.atproto.repo.createRecord", fs.repoCreateRecord))
 	fs.Register(NewCommand(xrpc.Query, "com.atproto.identity.resolveHandle", fs.identityResolveHandle))
-	fs.Register(NewCommand(xrpc.Query, "com.atproto.identity.resolveDid", fs.identityResolveDid))
 	return fs
 }
 
@@ -189,23 +188,6 @@ func (f *FakeServer) identityResolveHandle(user *string, params map[string][]str
 		}
 	}
 	return nil, fmt.Errorf("user with handle '%s' not found", handle[0])
-}
-
-func (f *FakeServer) identityResolveDid(user *string, params map[string][]string) (*atproto.IdentityResolveDid_Output, error) {
-	did, found := params["did"]
-	if !found {
-		return nil, errors.New("handle not specified")
-	}
-	for i := range f.userDids {
-		userDid := &f.userDids[i]
-		if userDid.DID.String() == did[0] {
-			result := &atproto.IdentityResolveDid_Output{
-				DidDoc: *userDid,
-			}
-			return result, nil
-		}
-	}
-	return nil, fmt.Errorf("user with DID '%s' not found", did[0])
 }
 
 func (f *FakeServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
