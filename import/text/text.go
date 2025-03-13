@@ -20,6 +20,7 @@ import (
 
 // Importer is an interface to convert some plain text into a Bluesky post.
 type Importer interface {
+	// Import converts the given text string into a post.
 	Import(text string) *atp.Post
 }
 
