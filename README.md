@@ -9,16 +9,20 @@ The K₃ library is designed to let you easily write bots and other programs tha
 It comprises the following components:
 
 - Create, import, split, and convert posts:
-  - [`atp.Post`](post.go) — Easily create new Bluesky posts from scratch.
+  - [`k3.Post`](post.go) — Easily create new Bluesky posts from scratch.
   - [`import.text.Importer`](import/text/text.go) — Import posts from a text document. This importer recognizes URIs, username mentions, and hashtags.
   - [`import.html.Importer`](import/html/html.go) — Import posts from HTML content. This importer applies some basic formatting and can recognize links.
   - [`posts.Split`](posts/split.go) — Split a long post into multiple posts.
-  - [`posts.Converter`](posts/converter.go) — Convert an `atp.Post` into a `bsky.FeedPost`, Bluesky's native post format.
+  - [`posts.Converter`](posts/converter.go) — Convert a `k3.Post` into a `bsky.FeedPost`, Bluesky's native post format.
 - Publish posts:
   - [`client.Client`](client/client.go) — Connect to Bluesky, resolve usernames, and publish posts.
   - [`multiposter.Multiposter`](multiposter/multiposter.go) — Publish multiple posts as a sequence or as a thread.
 
 ## How to use this library
+
+```go
+import "github.com/jtarrio/k3"
+```
 
 ### Create posts from scratch
 
