@@ -65,6 +65,15 @@ func (c *Converter) ToFeedPost(post *k3.Post) *bsky.FeedPost {
 	return out
 }
 
+// ToFeedPosts converts a slice of posts into a slice of FeedPost objects.
+func (c *Converter) ToFeedPosts(posts []*k3.Post) []*bsky.FeedPost {
+	var out []*bsky.FeedPost
+	for _, post := range posts {
+		out = append(out, c.ToFeedPost(post))
+	}
+	return out
+}
+
 func getBlockFeatures(block *k3.PostBlock) []*bsky.RichtextFacet_Features_Elem {
 	var out []*bsky.RichtextFacet_Features_Elem
 	if block.Link != nil && len(*block.Link) > 0 {
