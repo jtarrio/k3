@@ -1,6 +1,7 @@
 package posts_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -87,6 +88,42 @@ Y diciendo esto, y encomendándose de todo corazón a su señora Dulcinea, pidi�
 		k3.NewPost().SetCreationTime(creationTime).AddLanguage("es").AddText(
 			`[11/11] vencimiento: tal es la enemistad que me tiene; mas al cabo al cabo, han de poder poco sus malas artes contra la bondad de mi espada.
 —Dios lo haga como puede, —respondió Sancho Panza.`),
+	}
+	assert.Equal(t, expected, split)
+}
+
+func TestSplitCustomPartFunctionPrefix(t *testing.T) {
+	post := k3.NewPost().SetCreationTime(creationTime).AddLanguage("es").AddText(
+		`En esto, descubrieron treinta o cuarenta molinos de viento que hay en aquel campo, y así como don Quijote los vio, dijo a su escudero:
+—La ventura va guiando nuestras cosas mejor de lo que acertáramos a desear, porque ves allí, amigo Sancho Panza, donde se descubren treinta, o pocos más, desaforados gigantes, con quien pienso hacer batalla y quitarles a todos las vidas, con cuyos despojos comenzaremos a enriquecer; que ésta es buena guerra, y es gran servicio de Dios quitar tan mala simiente de sobre la faz de la tierra.
+—¿Qué gigantes? —dijo Sancho Panza.`)
+	partFn := func(num, total int) string { return fmt.Sprintf("(Part %d of %d)", num, total) }
+	split := posts.Split(post, posts.WithPrefix(partFn))
+	expected := []*k3.Post{
+		k3.NewPost().SetCreationTime(creationTime).AddLanguage("es").AddText(
+			`(Part 1 of 2) En esto, descubrieron treinta o cuarenta molinos de viento que hay en aquel campo, y así como don Quijote los vio, dijo a su escudero:
+—La ventura va guiando nuestras cosas mejor de lo que acertáramos a desear, porque ves allí, amigo Sancho Panza, donde se descubren treinta, o pocos`),
+		k3.NewPost().SetCreationTime(creationTime).AddLanguage("es").AddText(
+			`(Part 2 of 2) más, desaforados gigantes, con quien pienso hacer batalla y quitarles a todos las vidas, con cuyos despojos comenzaremos a enriquecer; que ésta es buena guerra, y es gran servicio de Dios quitar tan mala simiente de sobre la faz de la tierra.
+—¿Qué gigantes? —dijo Sancho Panza.`),
+	}
+	assert.Equal(t, expected, split)
+}
+
+func TestSplitCustomPartFunctionSuffix(t *testing.T) {
+	post := k3.NewPost().SetCreationTime(creationTime).AddLanguage("es").AddText(
+		`En esto, descubrieron treinta o cuarenta molinos de viento que hay en aquel campo, y así como don Quijote los vio, dijo a su escudero:
+—La ventura va guiando nuestras cosas mejor de lo que acertáramos a desear, porque ves allí, amigo Sancho Panza, donde se descubren treinta, o pocos más, desaforados gigantes, con quien pienso hacer batalla y quitarles a todos las vidas, con cuyos despojos comenzaremos a enriquecer; que ésta es buena guerra, y es gran servicio de Dios quitar tan mala simiente de sobre la faz de la tierra.
+—¿Qué gigantes? —dijo Sancho Panza.`)
+	partFn := func(num, total int) string { return fmt.Sprintf("(Part %d of %d)", num, total) }
+	split := posts.Split(post, posts.WithSuffix(partFn))
+	expected := []*k3.Post{
+		k3.NewPost().SetCreationTime(creationTime).AddLanguage("es").AddText(
+			`En esto, descubrieron treinta o cuarenta molinos de viento que hay en aquel campo, y así como don Quijote los vio, dijo a su escudero:
+—La ventura va guiando nuestras cosas mejor de lo que acertáramos a desear, porque ves allí, amigo Sancho Panza, donde se descubren treinta, o pocos (Part 1 of 2)`),
+		k3.NewPost().SetCreationTime(creationTime).AddLanguage("es").AddText(
+			`más, desaforados gigantes, con quien pienso hacer batalla y quitarles a todos las vidas, con cuyos despojos comenzaremos a enriquecer; que ésta es buena guerra, y es gran servicio de Dios quitar tan mala simiente de sobre la faz de la tierra.
+—¿Qué gigantes? —dijo Sancho Panza. (Part 2 of 2)`),
 	}
 	assert.Equal(t, expected, split)
 }

@@ -7,16 +7,29 @@ import (
 	"github.com/jtarrio/k3"
 )
 
-const maxPostGraphemeLength = 300
-
 // Split takes a post that is too long to be published on Bluesky, and splits it into multiple posts.
-func Split(post *k3.Post) []*k3.Post {
+//
+// You can use WithPrefix and WithSuffix to pass functions that will modify now the parts are numbered.
+// Note that this code assumes that numbering functions return strings that increase monotonically
+// with the post number. That means: the string for post N must be the same size or larger than
+// the string for post N-1.
+//
+// This happens trivially if your function returns strings like "Part 3 of 9", but not if it returns
+// strings like "Part three of nine", because the next string would be "part four of nine",
+// which is shorter.
+func Split(post *k3.Post, options ...SplitOption) []*k3.Post {
 	if post.GetGraphemeLength() <= maxPostGraphemeLength {
 		return []*k3.Post{post}
 	}
 
+	partFn := DefaultPartFunction
+	partPrefix := true
+	for _, option := range options {
+		partFn, partPrefix = option()
+	}
+
 	blocks := splitBlocks(post.Blocks)
-	solid := groupBlocks(blocks)
+	solid := groupBlocks(blocks, partFn, partPrefix)
 	var out []*k3.Post
 	for _, postBlocks := range solid {
 		newPost := k3.NewPost()
@@ -67,8 +80,7 @@ func splitBlocks(blocks []k3.PostBlock) []k3.PostBlock {
 }
 
 // groupBlocks creates groups of blocks that, together with the item count, fit within the limits.
-func groupBlocks(blocks []k3.PostBlock) [][]k3.PostBlock {
-	getPrefix := func(i, n int) string { return fmt.Sprintf("[%d/%d] ", i, n) }
+func groupBlocks(blocks []k3.PostBlock, partFn PartFunction, partPrefix bool) [][]k3.PostBlock {
 	maxCount := 9
 	for {
 		var outGroups [][]k3.PostBlock
@@ -77,7 +89,7 @@ func groupBlocks(blocks []k3.PostBlock) [][]k3.PostBlock {
 		startGroup := func(i int) {
 			n := len(outGroups) + 1
 			group = []k3.PostBlock{blocks[i]}
-			prefixSize := len(getPrefix(n, maxCount))
+			prefixSize := len(partFn(n, maxCount)) + 1
 			groupLen = blocks[i].GetGraphemeLength() + prefixSize
 		}
 		startGroup(0)
@@ -97,11 +109,50 @@ func groupBlocks(blocks []k3.PostBlock) [][]k3.PostBlock {
 			continue
 		}
 		for i := range outGroups {
-			group := append(
-				[]k3.PostBlock{k3.NewBlock(getPrefix(i+1, len(outGroups)))},
-				outGroups[i]...)
+			var group []k3.PostBlock
+			if partPrefix {
+				group = append(
+					[]k3.PostBlock{k3.NewBlock(partFn(i+1, len(outGroups)) + " ")},
+					outGroups[i]...)
+			} else {
+				group = append(outGroups[i], k3.NewBlock(" "+partFn(i+1, len(outGroups))))
+			}
 			outGroups[i] = group
 		}
 		return outGroups
 	}
 }
+
+// WithPrefix uses the given function as a part numbering function, and prepends its result to each message.
+func WithPrefix(fn PartFunction) SplitOption {
+	return func() (partFn PartFunction, prefix bool) {
+		return fn, true
+	}
+}
+
+// WithSuffix uses the given function as a part numbering function, and appends its result to each message.
+func WithSuffix(fn PartFunction) SplitOption {
+	return func() (partFn PartFunction, prefix bool) {
+		return fn, false
+	}
+}
+
+// DefaultPartFunction is the default part numbering function.
+func DefaultPartFunction(num, total int) string {
+	return fmt.Sprintf("[%d/%d]", num, total)
+}
+
+// PartFunction is the type for a part numbering function.
+//
+// Note that this code assumes that numbering functions return strings that increase monotonically
+// with the post number. That means: the string for post N must be the same size or larger than
+// the string for post N-1.
+//
+// This happens trivially if your function returns strings like "Part 3 of 9", but not if it returns
+// strings like "Part three of nine", because the next string would be "part four of nine",
+// which is shorter even though the number is bigger.
+type PartFunction func(num, total int) string
+
+type SplitOption func() (partFn PartFunction, prefix bool)
+
+const maxPostGraphemeLength = 300
