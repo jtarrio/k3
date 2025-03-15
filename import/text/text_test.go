@@ -90,25 +90,73 @@ func TestConvertUsernames(t *testing.T) {
 	post := text.NewImporter(text.WithHandleResolver(fakeResolver)).Import(`
 An invalid @username
 A @valid.username
+This is @invalid.url.shaped
 Something else`)
 	expected := k3.NewPost().AddText(`
 An invalid @username
 A `).AddMention(`@valid.username`, `cid:web:valid.username`).AddText(`
+This is @`).AddLink(`invalid.url.shaped`, `https://invalid.url.shaped`).AddText(`
 Something else`)
+	assert.Equal(t, expected, post)
+}
+
+func TestIgnoreUsernamesByDefault(t *testing.T) {
+	post := text.NewImporter().Import(`
+It doesn't matter whether the @username
+is @valid.username or @invalid.username
+it is not converted as a username.`)
+	expected := k3.NewPost().AddText(`
+It doesn't matter whether the @username
+is @`).AddLink(`valid.username`, `https://valid.username`).AddText(` or @`).AddLink(`invalid.username`, `https://invalid.username`).AddText(`
+it is not converted as a username.`)
 	assert.Equal(t, expected, post)
 }
 
 func TestConvertTags(t *testing.T) {
 	post := text.NewImporter().Import(`
 Some #hashtag
-A ##doubleHashtag
-Some #more.Text_In-ThisTag and after
-Something else`)
+A#doubleHashtag#isAllowed
+You can have #123numbers but not only #123 numbers
+You can also have #🙂emoji and #punc.tuation
+Last line`)
 	expected := k3.NewPost().AddText(`
 Some `).AddTag(`#hashtag`, `hashtag`).AddText(`
-A `).AddTag(`##doubleHashtag`, `#doubleHashtag`).AddText(`
-Some `).AddTag(`#more.Text_In-ThisTag`, `more.Text_In-ThisTag`).AddText(` and after
-Something else`)
+A`).AddTag(`#doubleHashtag#`, `doubleHashtag`).AddText(`isAllowed
+You can have `).AddTag(`#123numbers`, `123numbers`).AddText(` but not only #123 numbers
+You can also have `).AddTag(`#🙂emoji`, `🙂emoji`).AddText(` and `).AddTag(`#punc.tuation`, `punc.tuation`).AddText(`
+Last line`)
 	assert.Equal(t, expected, post)
+}
 
+func TestNoTags(t *testing.T) {
+	post := text.NewImporter(text.WithTagResolver(text.NoTagResolver)).Import(`
+Some #hashtag
+A#doubleHashtag#isAllowed
+You can have #123numbers but not only #123 numbers
+You can also have #🙂emoji and #punc.tuation
+Last line`)
+	expected := k3.NewPost().AddText(`
+Some #hashtag
+A#doubleHashtag#isAllowed
+You can have #123numbers but not only #123 numbers
+You can also have #🙂emoji and #`).AddLink(`punc.tuation`, `https://punc.tuation`).AddText(`
+Last line`)
+	assert.Equal(t, expected, post)
+}
+
+func TestConflicts(t *testing.T) {
+	resolveAll := func(h string) *string { return &h }
+	post := text.NewImporter(text.WithHandleResolver(resolveAll)).Import(`
+URL or hashtag? http://example.com#hash example.com#hash
+Handle or URL? @example.com
+Hashtag or URL? #example#example.com #example#example.com#example
+Hashtag or handle? #example@example.com
+`)
+	expected := k3.NewPost().AddText(`
+URL or hashtag? `).AddLink(`example.com`, `http://example.com#hash`).AddText(` `).AddLink(`example.com`, `https://example.com#hash`).AddText(`
+Handle or URL? `).AddMention(`@example.com`, `example.com`).AddText(`
+Hashtag or URL? `).AddTag(`#example#`, `example`).AddLink(`example.com`, `https://example.com`).AddText(` `).AddTag(`#example#`, `example`).AddLink(`example.com`, `https://example.com#example`).AddText(`
+Hashtag or handle? `).AddTag(`#example@example.com`, `example@example.com`).AddText(`
+`)
+	assert.Equal(t, expected, post)
 }

@@ -14,6 +14,7 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+	"unicode"
 
 	"github.com/jtarrio/k3"
 )
@@ -30,6 +31,7 @@ func NewImporter(options ...ImporterOption) Importer {
 		handleResolver: DefaultHandleResolver,
 		urlResolver:    DefaultUrlResolver,
 		urlFormatter:   DefaultUrlFormatter,
+		tagResolver:    DefaultTagResolver,
 	}
 	for _, option := range options {
 		option(i)
@@ -65,6 +67,15 @@ func WithUrlFormatter(f UrlFormatter) ImporterOption {
 	}
 }
 
+// WithTagResolver sets the function to use to resolve hashtags.
+//
+// By default, strings starting with # (optionally ending with #) and followed by non-whitespace characters (unless it's entirely composed of numbers) is considered a hash tag.
+func WithTagResolver(r TagResolver) ImporterOption {
+	return func(i *importer) {
+		i.tagResolver = r
+	}
+}
+
 // HandleResolver is a type for a function that takes a Bluesky handle and returns its DID, if it exists, or nil if it doesn't.
 type HandleResolver func(string) *string
 
@@ -72,7 +83,10 @@ type HandleResolver func(string) *string
 type UrlResolver func(string) *url.URL
 
 // UrlFormatter is a type for a function that takes a URL and returns the string to show in the post's text.
-type UrlFormatter func(url *url.URL) string
+type UrlFormatter func(*url.URL) string
+
+// TagResolver is a type for a function that takes a string (with initial '#') and returns the tag it corresponds to, or nil if none.
+type TagResolver func(string) *string
 
 type ImporterOption func(*importer)
 
@@ -80,6 +94,7 @@ type importer struct {
 	handleResolver HandleResolver
 	urlResolver    UrlResolver
 	urlFormatter   UrlFormatter
+	tagResolver    TagResolver
 }
 
 func (i *importer) Import(text string) *k3.Post {
@@ -113,10 +128,11 @@ func (i *importer) Import(text string) *k3.Post {
 				p = f.end
 			}
 		case tag:
-			tag := text[f.start:f.end]
-			if len(tag) > 1 {
+			hashtag := text[f.start:f.end]
+			tag := i.tagResolver(hashtag)
+			if tag != nil {
 				out.AddText(text[p:f.start])
-				out.AddTag(tag, tag[1:])
+				out.AddTag(hashtag, *tag)
 				p = f.end
 			}
 		}
@@ -136,16 +152,11 @@ func findAll(str string, re *regexp.Regexp, what foundType) []found {
 	for _, linkMatch := range re.FindAllStringIndex(str, -1) {
 		start := linkMatch[0]
 		end := linkMatch[1]
-		if what == webUrl {
-			if start > 0 && str[start-1] == '@' || str[start-1] == '#' {
-				continue
-			}
-			for end > start && isPunctuation(str[end-1]) {
-				end--
-			}
-			if start == end {
-				continue
-			}
+		for end > start && isPunctuation(str[end-1]) {
+			end--
+		}
+		if start == end {
+			continue
 		}
 		out = append(out, found{start: start, end: end, what: what})
 	}
@@ -176,7 +187,7 @@ var usernameRe = regexp.MustCompile(
 )
 
 var hashtagRe = regexp.MustCompile(
-	`#[A-Za-z#][A-Za-z0-9._#-]*`,
+	`#[^\s#]+#?`,
 )
 
 func sortFound(f []found) {
@@ -204,10 +215,12 @@ type found struct {
 	what       foundType
 }
 
+// DefaultHandleResolver recognizes no handles, so they don't get turned into links.
 func DefaultHandleResolver(h string) *string {
 	return nil
 }
 
+// DefaultUrlResolver returns every string that can be parsed as a URL, with or without an 'http(s)://' prefix.
 func DefaultUrlResolver(u string) *url.URL {
 	n := strings.Index(u, "://")
 	if n < 0 {
@@ -217,9 +230,13 @@ func DefaultUrlResolver(u string) *url.URL {
 	if err != nil {
 		return nil
 	}
+	if !parsed.IsAbs() {
+		return nil
+	}
 	return parsed
 }
 
+// NetworkUrlResolver parses the URL like DefaultUrlResolver, but then checks that the hostname has an IP address.
 func NetworkUrlResolver(u string) *url.URL {
 	parsed := DefaultUrlResolver(u)
 	ips, err := net.LookupIP(parsed.Hostname())
@@ -229,6 +246,7 @@ func NetworkUrlResolver(u string) *url.URL {
 	return parsed
 }
 
+// DefaultUrlFormatter returns the url without scheme, cut to 20 characters if it's longer than 24.
 func DefaultUrlFormatter(u *url.URL) string {
 	host := u.Host
 	path := u.Path
@@ -240,4 +258,21 @@ func DefaultUrlFormatter(u *url.URL) string {
 		return hostPath[:20] + "…"
 	}
 	return hostPath
+}
+
+// DefaultTagResolver cuts the initial '#' and final '#', if it exists, and returns the rest unless it's entirely composed of numbers.
+func DefaultTagResolver(hashtag string) *string {
+	hashtag, _ = strings.CutPrefix(hashtag, "#")
+	hashtag, _ = strings.CutSuffix(hashtag, "#")
+	for _, r := range hashtag {
+		if !unicode.IsNumber(r) {
+			return &hashtag
+		}
+	}
+	return nil
+}
+
+// NoTagResolver always returns nil so no hashtags are turned into links.
+func NoTagResolver(hashtag string) *string {
+	return nil
 }
