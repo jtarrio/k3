@@ -2,6 +2,7 @@ package posts_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -28,9 +29,9 @@ func TestSplitIntoTwo(t *testing.T) {
 	expected := []*k3.Post{
 		k3.NewPost().SetCreationTime(creationTime).AddLanguage("es").AddText(
 			`[1/2] xxxxxx En esto, descubrieron treinta o cuarenta molinos de viento que hay en aquel campo, y así como don Quijote los vio, dijo a su escudero:
-—La ventura va guiando nuestras cosas mejor de lo que acertáramos a desear, porque ves allí, amigo Sancho Panza, donde se descubren treinta, o pocos más,`),
+—La ventura va guiando nuestras cosas mejor de lo que acertáramos a desear, porque ves allí, amigo Sancho Panza, donde se descubren treinta, o pocos`),
 		k3.NewPost().SetCreationTime(creationTime).AddLanguage("es").AddText(
-			`[2/2] desaforados gigantes, con quien pienso hacer batalla y quitarles a todos las vidas, con cuyos despojos comenzaremos a enriquecer; que ésta es buena guerra, y es gran servicio de Dios quitar tan mala simiente de sobre la faz de la tierra.
+			`[2/2] más, desaforados gigantes, con quien pienso hacer batalla y quitarles a todos las vidas, con cuyos despojos comenzaremos a enriquecer; que ésta es buena guerra, y es gran servicio de Dios quitar tan mala simiente de sobre la faz de la tierra.
 —¿Qué gigantes? —dijo Sancho Panza.`),
 	}
 	assert.Equal(t, expected, split)
@@ -84,9 +85,9 @@ Y diciendo esto, y encomendándose de todo corazón a su señora Dulcinea, pidi�
 			`[9/11] su asno, y cuando llegó halló que no se podía menear: tal fue el golpe que dio con él Rocinante.
 —¡Válame Dios! —dijo Sancho. —¿No le dije yo a vuestra merced que mirase bien lo que hacía, que no eran sino molinos de viento, y no lo podía ignorar sino quien llevase otros tales en la cabeza?`),
 		k3.NewPost().SetCreationTime(creationTime).AddLanguage("es").AddText(
-			`[10/11] —Calla, amigo Sancho, —respondió don Quijote; —que las cosas de la guerra, más que otras, están sujetas a continua mudanza; cuanto más, que yo pienso, y es así verdad, que aquel sabio Frestón que me robó el aposento y los libros ha vuelto estos gigantes en molinos por quitarme la gloria de su`),
+			`[10/11] —Calla, amigo Sancho, —respondió don Quijote; —que las cosas de la guerra, más que otras, están sujetas a continua mudanza; cuanto más, que yo pienso, y es así verdad, que aquel sabio Frestón que me robó el aposento y los libros ha vuelto estos gigantes en molinos por quitarme la gloria de`),
 		k3.NewPost().SetCreationTime(creationTime).AddLanguage("es").AddText(
-			`[11/11] vencimiento: tal es la enemistad que me tiene; mas al cabo al cabo, han de poder poco sus malas artes contra la bondad de mi espada.
+			`[11/11] su vencimiento: tal es la enemistad que me tiene; mas al cabo al cabo, han de poder poco sus malas artes contra la bondad de mi espada.
 —Dios lo haga como puede, —respondió Sancho Panza.`),
 	}
 	assert.Equal(t, expected, split)
@@ -126,4 +127,16 @@ func TestSplitCustomPartFunctionSuffix(t *testing.T) {
 —¿Qué gigantes? —dijo Sancho Panza. (Part 2 of 2)`),
 	}
 	assert.Equal(t, expected, split)
+}
+
+func TestSplitMaximumSize(t *testing.T) {
+	body := strings.Repeat(" a", 290)
+	for l := range 20 {
+		prefix := strings.Repeat("p", l)
+		post := k3.NewPost().AddText(prefix + body)
+		split := posts.Split(post)
+		assert.LessOrEqual(t, split[0].GetGraphemeLength(), 300)
+		runes := []rune(split[0].GetPlainText())
+		assert.LessOrEqual(t, len(runes), 300)
+	}
 }

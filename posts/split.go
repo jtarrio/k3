@@ -94,12 +94,12 @@ func groupBlocks(blocks []k3.PostBlock, partFn PartFunction, partPrefix bool) []
 		}
 		startGroup(0)
 		for i := 2; i < len(blocks); i += 2 {
-			bl := blocks[i].GetGraphemeLength()
+			bl := blocks[i-1].GetGraphemeLength() + blocks[i].GetGraphemeLength()
 			if groupLen+bl > maxPostGraphemeLength {
 				outGroups = append(outGroups, group)
 				startGroup(i)
 			} else {
-				groupLen += blocks[i-1].GetGraphemeLength() + bl
+				groupLen += bl
 				group = append(group, blocks[i-1], blocks[i])
 			}
 		}
