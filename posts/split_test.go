@@ -93,6 +93,28 @@ Y diciendo esto, y encomendándose de todo corazón a su señora Dulcinea, pidi�
 	assert.Equal(t, expected, split)
 }
 
+func TestSplitMultipleBlocks(t *testing.T) {
+	post := k3.NewPost().SetCreationTime(creationTime).AddLanguage("es").
+		AddText(`xxxxxx En esto, descubrieron treinta o cuarenta molinos de viento que hay en aquel campo, y así como don Quijote los vio, `).
+		AddText("dijo a su escudero:\n—La ventura va guiando nuestras cosas mejor de lo que acertáramos a desear, ").
+		AddText(`porque ves allí, amigo Sancho Panza, donde se descubren treinta, o pocos más, desaforados gigantes, `).
+		AddText(`con quien pienso hacer batalla y quitarles a todos las vidas, `).
+		AddText(`con cuyos despojos comenzaremos a enriquecer; que ésta es buena guerra, `).
+		AddText("y es gran servicio de Dios quitar tan mala simiente de sobre la faz de la tierra.\n").
+		AddLink(`—¿Qué gigantes?`, "https://example.com").
+		AddText(` —dijo Sancho Panza.`)
+	split := posts.Split(post)
+	expected := []*k3.Post{
+		k3.NewPost().SetCreationTime(creationTime).AddLanguage("es").AddText(
+			`[1/2] xxxxxx En esto, descubrieron treinta o cuarenta molinos de viento que hay en aquel campo, y así como don Quijote los vio, dijo a su escudero:
+—La ventura va guiando nuestras cosas mejor de lo que acertáramos a desear, porque ves allí, amigo Sancho Panza, donde se descubren treinta, o pocos`),
+		k3.NewPost().SetCreationTime(creationTime).AddLanguage("es").AddText(
+			`[2/2] más, desaforados gigantes, con quien pienso hacer batalla y quitarles a todos las vidas, con cuyos despojos comenzaremos a enriquecer; que ésta es buena guerra, y es gran servicio de Dios quitar tan mala simiente de sobre la faz de la tierra.
+`).AddLink(`—¿Qué gigantes?`, "https://example.com").AddText(` —dijo Sancho Panza.`),
+	}
+	assert.Equal(t, expected, split)
+}
+
 func TestSplitCustomPartFunctionPrefix(t *testing.T) {
 	post := k3.NewPost().SetCreationTime(creationTime).AddLanguage("es").AddText(
 		`En esto, descubrieron treinta o cuarenta molinos de viento que hay en aquel campo, y así como don Quijote los vio, dijo a su escudero:

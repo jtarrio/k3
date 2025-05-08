@@ -47,8 +47,8 @@ func Split(post *k3.Post, options ...SplitOption) []*k3.Post {
 func splitBlocks(blocks []k3.PostBlock) []k3.PostBlock {
 	var output []k3.PostBlock
 	isText := true
-	start := 0
 	for _, block := range blocks {
+		start := 0
 		runes := []rune(block.Text)
 		addBlock := func(end int) {
 			newBlock := block
