@@ -12,6 +12,7 @@ package html
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"unicode"
 
@@ -25,20 +26,38 @@ type Importer interface {
 	Import(html string) (*k3.Post, error)
 }
 
+type ImporterOption func(*importer)
+
 // NewImporter creates a new HTML importer.
-func NewImporter() Importer {
-	return &importer{}
+func NewImporter(options ...ImporterOption) Importer {
+	out := &importer{}
+	for _, opt := range options {
+		opt(out)
+	}
+	return out
 }
 
-type importer struct{}
+// WithBaseUrl specifies a base URL to use when a relative URL is found.
+func WithBaseUrl(baseUrl string) ImporterOption {
+	return func(i *importer) {
+		base, err := url.Parse(baseUrl)
+		if err == nil {
+			i.baseUrl = base
+		}
+	}
+}
 
-func (*importer) Import(input string) (*k3.Post, error) {
+type importer struct {
+	baseUrl *url.URL
+}
+
+func (i *importer) Import(input string) (*k3.Post, error) {
 	doc, err := html.Parse(strings.NewReader(input))
 	if err != nil {
 		return nil, &HtmlParseError{err}
 	}
 
-	conv := &converter{post: k3.NewPost()}
+	conv := &converter{post: k3.NewPost(), baseUrl: i.baseUrl}
 	conv.convert(doc)
 	return conv.post, nil
 }
@@ -51,6 +70,7 @@ type converter struct {
 	linkTarget []string
 	listIndex  []int
 	ignore     int
+	baseUrl    *url.URL
 }
 
 func (c *converter) convert(n *html.Node) {
@@ -129,11 +149,22 @@ func startAnchor(c *converter, n *html.Node) {
 	}
 	for _, a := range n.Attr {
 		if a.Key == "href" {
-			c.linkTarget = append(c.linkTarget, a.Val)
+			c.linkTarget = append(c.linkTarget, resolveUrl(a.Val, c.baseUrl))
 			return
 		}
 	}
 	c.linkTarget = append(c.linkTarget, "")
+}
+
+func resolveUrl(u string, baseUrl *url.URL) string {
+	if baseUrl == nil {
+		return u
+	}
+	parsed, err := url.Parse(u)
+	if err != nil {
+		return u
+	}
+	return baseUrl.ResolveReference(parsed).String()
 }
 
 func endAnchor(c *converter, _ *html.Node) {

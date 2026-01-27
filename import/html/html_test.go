@@ -30,6 +30,15 @@ links</a>.`)
 	assert.Equal(t, expected, post)
 }
 
+func TestHtmlWithRelativeLinks(t *testing.T) {
+	post, err := html.NewImporter(html.WithBaseUrl("http://example.org/foo/")).Import(`Some slightly <a href="https://example.net">harder</a> text <a href="url1">with
+relative</a> and <a href="/url2">domain-absolute</a> links.`)
+	assert.NoError(t, err)
+	expected := k3.NewPost().AddText(`Some slightly `).AddLink(`harder`, "https://example.net").AddText(` text `).
+		AddLink(`with relative`, "http://example.org/foo/url1").AddText(` and `).AddLink(`domain-absolute`, "http://example.org/url2").AddText(` links.`)
+	assert.Equal(t, expected, post)
+}
+
 func TestHtmlWithFormatting(t *testing.T) {
 	post, err := html.NewImporter().Import(`<p>This is a paragraph.</p><p>This is another paragraph.</p><p>And another one.</p>`)
 	assert.NoError(t, err)
